@@ -3,6 +3,7 @@
 from hk_house.models.base import PropertyKind, TxType
 from hk_house.sources.centanet.parser import to_base as centanet_base
 from hk_house.sources.house730.parser import to_base as house730_base
+from hk_house.sources.hangseng.parser import to_base as hangseng_base
 from hk_house.sources.hse28.parser import to_base as hse28_base
 from hk_house.sources.midland.parser import to_base as midland_base
 
@@ -149,3 +150,31 @@ def test_hse28_structured_fields():
     assert b.net_area_ft == 471 and b.price_per_net_ft == 19915
     assert b.price == 9_380_000
     assert b.bedrooms == 2 and b.bathrooms == 1 and b.direction == "西"
+
+
+def test_hangseng_valuation_mapping():
+    raw = {
+        "carparkPrice": "0",
+        "addressZhDispSimple": "香港, 铜锣湾, 兴发街42号, 维景花园, A座, 10楼, A1室",
+        "blockCode": "5711",
+        "grossArea": "620",
+        "flatCode": "A1",
+        "CWReference": "64077232",
+        "saleableArea": "520",
+        "addressZhDisp": "香港, 銅鑼灣, 興發街42號, 維景花園, A座, 10樓, A1室",
+        "valuationDate": "21/06/2026",
+        "coveredCarpark": "0",
+        "price": "9440000",
+        "addressDisp": "Flat A1, 10/F, Block/Tower A, Viking Garden, 42 Hing Fat Street, Causeway Bay, Hong Kong",
+        "completionDate": "03/1977",
+        "openCarpark": "0",
+        "floorCode": "10",
+    }
+    b = hangseng_base(raw)
+    assert b.source == "hangseng" and b.source_id == "64077232:5711:10:A1"
+    assert b.tx_type is TxType.SALE and b.kind is PropertyKind.RESIDENTIAL
+    assert b.price == 9_440_000 and b.gross_area_ft == 620 and b.net_area_ft == 520
+    assert b.price_per_gross_ft == 9_440_000 / 620
+    assert b.price_per_net_ft == 9_440_000 / 520
+    assert b.address == "香港, 銅鑼灣, 興發街42號, 維景花園, A座, 10樓, A1室"
+    assert b.building == "5711" and b.floor == "10" and b.flat == "A1"
