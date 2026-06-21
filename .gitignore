@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+
+# data/ is tracked (dataset committed), but never commit secrets or token caches
+data/.cache/
+*.token
